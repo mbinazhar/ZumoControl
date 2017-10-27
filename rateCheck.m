@@ -1,6 +1,10 @@
-for(i=1:10)
-sendSpeeds(s,1,255,1)
-pause(.2);
-sendSpeeds(s,1,1,255)
-pause(.2);
+while (1)
+    sendSpeeds(s,1,30,30);
+    sendSpeeds(s,2,30,30);
+    sendSpeeds(s,3,30,30);
+    pause(0.2);
+    sendSpeeds(s,1,-30,-30);
+    sendSpeeds(s,2,-30,-30);
+    sendSpeeds(s,3,-30,-30);
+    pause(0.2);
 end

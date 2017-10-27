@@ -1,9 +1,9 @@
 function [vLeft,vRight] = calcSpeedsWhileMoving( i,x,y,theta,x_g,y_g )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
-Kp =20;
-Ki =10;
-Kd =10;
+Kp =10;
+Ki =8;
+Kd =5;
 
 dt=0.20; %200ms
 
@@ -42,8 +42,8 @@ e_k_1(i) = e_k;
 
 if (dist>distThresh) % && (abs(e_k)>0.2) 
     vRot = w;
-    vLeft =  40-vRot;
-    vRight = 40+vRot;
+    vLeft =  30-vRot;
+    vRight = 30+vRot;
 else
     vLeft=0;
     vRight=0;

@@ -29,7 +29,14 @@ void loop() {
   int temp;
   unsigned long currentMillis = millis();
   
-
+//Serial.println(" mV - Battery ");
+    uint16_t batt=readBatteryMillivolts();
+//  Serial.print(batt);
+  if(batt<7200 && batt>3000)
+  PololuBuzzer::playNote(NOTE_C_SHARP(7),10000L,15);
+  else
+  PololuBuzzer::stopPlaying();
+  
 if (stringComplete) {
   stringComplete = false;
   ledYellow(1);
