@@ -9,22 +9,24 @@ robotIds = [528 314 871];
 [~,numberOfRobots] =size(robotIds);
 
 
-numberOfRobots=2;
-robot=[ ([-.1,   -.7, pi/2])
-        ([-5, -6.5, pi/2])
+numberOfRobots=3;
+robot=[ ([0, 0, pi/2])
+        ([0, 0, pi/2])
+        ([0, 0, pi/2])
         ];
 robotT1 = robot;
 %positions being input from VREP - these are just DUMMY values, but right
 %ones
 
-figure; hold on; grid on;
+figure; 
+hold on; grid on;
 FLOORSIZE = 1.5; % in meters HALF
 axis([-FLOORSIZE FLOORSIZE -FLOORSIZE FLOORSIZE]); axis square;
 
 %Obstacle Info
 x0 = 0;
 y0 = 0;
-v1=.3; v2=.3;
+v1=.3; v2=.4;
 rectWidth =v1*2;
 rectHeight=v2*2;
 
@@ -36,7 +38,7 @@ B=sqrt(1/(2*((v2)^2)));
 
 ellipse(x0,y0,1/A,1/B);
 
-ra = 1;
+ra = 0.5;
 rk = zeros(numberOfRobots,1);
 
 fxkdes = ones(numberOfRobots,1);
@@ -78,8 +80,9 @@ MAX_TIME = 200;
 zed = zeros(MAX_TIME,numberOfRobots*2);
 % xdot1, ydot1, xdot2, ydot2
 while t<MAX_TIME
+% while robot(1,1)<1 && robot(2,1)<1 && robot(3,1)<1 && robot(1,2)<.9 && robot(2,2)<.9 && robot(3,2)<.9
     t = t+1;
-    
+    tic;
     for i=1:numberOfRobots
 k = find(robots(:,1)==robotIds(1,i));
         if isempty(k)
@@ -120,9 +123,9 @@ k = find(robots(:,1)==robotIds(1,i));
             fykr   = fykrcc;
         end
         
-        if(i==4)
-            zed
-        end
+%         if(i==4)
+%             zed
+%         end
         
         fxkrn = fxkr/norm([fxkr;fykr]);
         fykrn = fykr/norm([fxkr;fykr]);
@@ -166,28 +169,45 @@ k = find(robots(:,1)==robotIds(1,i));
             zed(t,3) = real(xdot(i));
             zed(t,4) = real(ydot(i));
         end
+        if(i==3)
+            zed(t,5) = real(xdot(i));
+            zed(t,6) = real(ydot(i));
+        end
     end
     
     for i=1:numberOfRobots
-        mult = 1;
+        mult = 3;
         if(i==1)
-%             goalX = robot(i,1)+zed(t,1)*mult;
-%             goalY = robot(i,2)+zed(t,2)*mult;
-%             [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,goalX,goalY);
-%             formatSpec = 'Robot=%1.0f X=%4.2f, Y=%4.2f, Th=%4.2f, Xg=%4.2f, Yg=%4.2f\n';
+            goalX = robot(i,1)+zed(t,1)*mult;
+            goalY = robot(i,2)+zed(t,2)*mult;
+            [vLeft,vRight] = calcSpeedsWhileMoving(i,robot(i,1),robot(i,2),robot(i,3),goalX,goalY);
 %             sendSpeeds(s,i,vLeft,vRight);
         end
         if(i==2)
             goalX = robot(i,1)+zed(t,3)*mult;
             goalY = robot(i,2)+zed(t,4)*mult;
-            [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,goalX,goalY);
-            formatSpec = 'Robot=%1.0f X=%4.2f, Y=%4.2f, Th=%4.2f, Xg=%4.2f, Yg=%4.2f\n';
-            sendSpeeds(s,i,vLeft,vRight);
-            
-        end        
-     %   [res Ints Floats Strings Buffer]=vrep.simxCallScriptFunction(clientID,'remoteApiCommandServer',vrep.sim_scripttype_childscript,'setVelocity_function',[i vX vY],[],'',[],vrep.simx_opmode_blocking);
+            [vLeft,vRight] = calcSpeedsWhileMoving(i,robot(i,1),robot(i,2),robot(i,3),goalX,goalY);
+%             sendSpeeds(s,i,vLeft,vRight);
+        end
+        if(i==3)
+            goalX = robot(i,1)+zed(t,5)*mult;
+            goalY = robot(i,2)+zed(t,6)*mult;
+            [vLeft,vRight] = calcSpeedsWhileMoving(i,robot(i,1),robot(i,2),robot(i,3),goalX,goalY);
+%             sendSpeeds(s,i,vLeft,vRight);
+        end
+        
+        if robot(i,1)<1 && robot(i,2)<.85  
+        sendSpeeds(s,i,vLeft,vRight);
+        else
+            sendSpeeds(s,i,0,0);
+        end
+        
     end
-    pause(0.2);
+    timeElapsed=toc;
+    while(timeElapsed<0.2)
+        timeElapsed=toc;
+    end
+%     pause(0.1);
     t
     zed
 %     vX

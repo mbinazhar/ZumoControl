@@ -1,4 +1,5 @@
-close all; color = 'kbgrcmy'; colorVal=1;
+% close all;
+color = 'kbgrcmy'; colorVal=1;
 
 global robots
 
@@ -6,9 +7,11 @@ robotIds = [528 314 871];
 [~,numberOfRobots] =size(robotIds);
 
 clear calcSpeeds
+clear calcSpeedsWhileMoving
 
-figure; hold on; grid on;
-axis([-3 3 -3 3]); axis square;
+% figure; 
+hold on; grid on;
+axis([-1 1 -1 1]); axis square;
 
 % Create Animated Line Objects for Each robot, different colors
 robotTrajectory = [animatedline('Color',color(colorVal),'LineWidth',2)];
@@ -34,12 +37,20 @@ while t>0
             theta = robots(k(1,1),4);
             
             if i==1
-                [vLeft,vRight] = calcSpeeds(i,x,y,theta,0,0);
+%                 [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.5,-.7); % For traj Speed Test
+                 [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.6,0); % For Rezaee
+                sendSpeeds(s,i,vLeft,vRight);
+            elseif i==2
+%                 [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.1,-0.7);
+                 [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.4,-.5);
+                sendSpeeds(s,i,vLeft,vRight);
             elseif i==3
-                [vLeft,vRight] = calcSpeeds(i,x,y,theta,0,1);
+%                 [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,0.3,-.7);
+                 [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.6,-.85);
+                sendSpeeds(s,i,vLeft,vRight);
             end
             
-            sendSpeeds(s,i,vLeft,vRight);
+%             sendSpeeds(s,i,vLeft,vRight);
             sprintf('Robot=%.1f , x=%.2f , y=%.2f, t=%.2f, vLeft=%.1f , vRight=%.1f',i,x,y,theta,vLeft,vRight)
             
         end
