@@ -1,13 +1,15 @@
 function [vLeft,vRight] = calcSpeedsWhileMoving( i,x,y,theta,x_g,y_g )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
-Kp =10;
-Ki =8;
-Kd =5;
+Kp =8;%12;
+Ki =3;%5;
+Kd =2;%5
 
 dt=0.20; %200ms
 
 distThresh = 0.1;
+
+defaultSpeed = 25;
 
 persistent E_k;
 persistent e_k_1;
@@ -42,8 +44,8 @@ e_k_1(i) = e_k;
 
 if (dist>distThresh) % && (abs(e_k)>0.2) 
     vRot = w;
-    vLeft =  30-vRot;
-    vRight = 30+vRot;
+    vLeft =  defaultSpeed-5-vRot;
+    vRight = defaultSpeed+vRot;
 else
     vLeft=0;
     vRight=0;
@@ -67,8 +69,12 @@ if abs(vLeft) < 10
     vLeft=0;
 end
 if abs(vRight) < 10
-    vLeft=0;
+    vRight=0;
 end
+
+% if vLeft == NaN || vRight == NaN
+%     vLeft=0;vRight=0;
+% end
 
 
 vLeft=round(vLeft);

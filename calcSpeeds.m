@@ -41,12 +41,12 @@ e_k_1(i) = e_k;
 
 
 if (abs(e_k)>0.2) && (dist>distThresh)
-    vRot = w;
+    vRot = (w/abs(w))*10;
     vLeft =  -vRot;
     vRight = +vRot;
 elseif (dist>distThresh)
-    vLeft =  70;
-    vRight = 70;
+    vLeft =  35;  % 70
+    vRight = 35;
 else
     vLeft=0;
     vRight=0;
@@ -69,7 +69,7 @@ if abs(vLeft) < 10
     vLeft=0;
 end
 if abs(vRight) < 10
-    vLeft=0;
+    vRight=0;
 end
 
 
