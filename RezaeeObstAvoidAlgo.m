@@ -1,5 +1,7 @@
 % close all;
-% 
+% OBSTACLE AVOIDANCE TEST 
+
+
 clear calcSpeeds
 clear calcSpeedsWhileMoving
 
@@ -181,13 +183,13 @@ k = find(robots(:,1)==robotIds(1,i));
             goalX = robot(i,1)+zed(t,1)*mult;
             goalY = robot(i,2)+zed(t,2)*mult;
             [vLeft,vRight] = calcSpeedsWhileMoving(i,robot(i,1),robot(i,2),robot(i,3),goalX,goalY);
-%             sendSpeeds(s,i,vLeft,vRight);
+            sendSpeeds(s,i,vLeft,vRight);
         end
         if(i==2)
             goalX = robot(i,1)+zed(t,3)*mult;
             goalY = robot(i,2)+zed(t,4)*mult;
             [vLeft,vRight] = calcSpeedsWhileMoving(i,robot(i,1),robot(i,2),robot(i,3),goalX,goalY);
-%             sendSpeeds(s,i,vLeft,vRight);
+            sendSpeeds(s,i,vLeft,vRight);
         end
         if(i==3)
             goalX = robot(i,1)+zed(t,5)*mult;
@@ -196,11 +198,11 @@ k = find(robots(:,1)==robotIds(1,i));
 %             sendSpeeds(s,i,vLeft,vRight);
         end
         
-        if robot(i,1)<1 && robot(i,2)<.85  
-        sendSpeeds(s,i,vLeft,vRight);
-        else
-            sendSpeeds(s,i,0,0);
-        end
+%         if robot(i,1)<1 && robot(i,2)<.85  
+%         sendSpeeds(s,i,vLeft,vRight);
+%         else
+%             sendSpeeds(s,i,0,0);
+%         end
         
     end
     timeElapsed=toc;

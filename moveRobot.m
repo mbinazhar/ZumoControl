@@ -38,16 +38,19 @@ while t>0
             
             if i==1
 %                 [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.5,-.7); % For traj Speed Test
-                 [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.6,0); % For Rezaee
-                sendSpeeds(s,i,vLeft,vRight);
+%                  [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.6,0); % For Rezaee
+[vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.70,-.3);                   % For formation test
+                sendSpeedsCharacterWise(s,i,vLeft,vRight);
             elseif i==2
 %                 [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.1,-0.7);
-                 [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.4,-.5);
-                sendSpeeds(s,i,vLeft,vRight);
+%                  [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.4,-.5);
+[vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.65,-.65);
+                sendSpeedsCharacterWise(s,i,vLeft,vRight);
             elseif i==3
 %                 [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,0.3,-.7);
-                 [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.6,-.85);
-                sendSpeeds(s,i,vLeft,vRight);
+%                  [vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.6,-.85);
+[vLeft,vRight] = calcSpeedsWhileMoving(i,x,y,theta,-0.4,-.85);
+%                 sendSpeedsCharacterWise(s,i,vLeft,vRight);
             end
             
 %             sendSpeeds(s,i,vLeft,vRight);

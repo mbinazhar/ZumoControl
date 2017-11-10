@@ -4,9 +4,9 @@ global robots
 robotIds = [528 314 871];
 [~,numberOfRobots] =size(robotIds);
 
-Kp =12;
-Ki =8;
-Kd =5;
+Kp =12*3;
+Ki =8*3;
+Kd =5*3;
 
     E_k    = [0;0;0];
     e_k_1 = [0;0;0];
@@ -69,13 +69,13 @@ end
 
                 
             if i==1
-                sendSpeeds(s,i,vLeft,vRight);
+                sendSpeedsCharacterWise(s,i,vLeft,vRight);
             end
             if i==2
-                sendSpeeds(s,i,vLeft,vRight);
+                sendSpeedsCharacterWise(s,i,vLeft,vRight);
             end
             if i==3
-                sendSpeeds(s,i,vLeft,vRight);
+                sendSpeedsCharacterWise(s,i,vLeft,vRight);
             end
 
             

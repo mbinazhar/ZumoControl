@@ -5,14 +5,14 @@ clear calcSpeedsWhileMoving
 
 color = 'kbgrcmy'; colorVal=1;
 
-    fxvdes = .3;%.5
+    fxvdes = .5;%.5
     fyvdes = .9;
     virtualYForceMultiplier=3;
     kp = 0;%.5; % Force on virtual bot
     
 TIMESTEP = 0.2;
 
-robotIds = [528 314 871];
+% robotIds = [528 314 871];
 robotIds = [528 314];
 [~,numberOfRobots] =size(robotIds);
 
@@ -266,19 +266,19 @@ k = find(robots(:,1)==robotIds(1,i));
             goalX = robot(i,1)+zed(t,1)*mult;
             goalY = robot(i,2)+zed(t,2)*mult;
             [vLeft,vRight] = calcSpeedsWhileMoving(i,robot(i,1),robot(i,2),robot(i,3),goalX,goalY);
-            sendSpeeds(s,i,vLeft,vRight);
+            sendSpeedsCharacterWise(s,i,vLeft,vRight);
         end
         if(i==2)
             goalX = robot(i,1)+zed(t,3)*mult;
             goalY = robot(i,2)+zed(t,4)*mult;
             [vLeft,vRight] = calcSpeedsWhileMoving(i,robot(i,1),robot(i,2),robot(i,3),goalX,goalY);
-            sendSpeeds(s,i,vLeft,vRight);
+            sendSpeedsCharacterWise(s,i,vLeft,vRight);
         end
         if(i==3)
             goalX = robot(i,1)+zed(t,5)*mult;
             goalY = robot(i,2)+zed(t,6)*mult;
             [vLeft,vRight] = calcSpeedsWhileMoving(i,robot(i,1),robot(i,2),robot(i,3),goalX,goalY);
-%             sendSpeeds(s,i,vLeft,vRight);
+%             sendSpeedsCharacterWise(s,i,vLeft,vRight);
         end
         
 %         if robot(i,1)<1 && robot(i,2)<.85  
