@@ -1,3 +1,4 @@
+#define zumoID 1    //314==1, 528==2, 871==3
 #define encoderRevCounts 1670   //ticks per revolution of wheel belt
 #define circumference 217   //mm //on the bassis a belt
 #define diameter_zumo 69  //mm  //taken out from circumference
@@ -9,6 +10,7 @@
 
 Zumo32U4Motors motors;      //motors initialize
 Zumo32U4Encoders encoders;  //encoder initialize
+Zumo32U4ProximitySensors proxSensors;
 
 long encCurrL, encCurrR;    //encoder left and right
 
@@ -18,6 +20,10 @@ unsigned long currentMillis = 0;
 
 unsigned long timeOutPreviousMillis = 0;  //Velocity Time Out.
 int velocityTimeOut = 5000; //ms  // changing this will change the velocity time out        
+
+int sensorInterval = 100; //ms
+int previousSensorInterval = 100; //ms
+
 
 String inputString = "";         // a String to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
@@ -46,8 +52,7 @@ boolean pidActive = false;              // Code itself deal with this parameter
 
 Zumo32U4Buzzer buzzer;
 
-const char fugue[] PROGMEM =
-  "! O5 L16 agafaea dac+adaea fa<aa<bac#a dac#adaea f";
+const char fugue[] PROGMEM = "! O5 L16 agafaea dac+adaea fa<aa<bac#a dac#adaea f";
   
   
 void setup() {
@@ -59,6 +64,7 @@ void setup() {
   velR = 00; 
   pidL.SetMode(AUTOMATIC);
   pidR.SetMode(AUTOMATIC);
+  proxSensors.initThreeSensors();
 }
 
 void loop() {
@@ -75,9 +81,9 @@ void loop() {
     interpretmySerialData();
     stringComplete = false;
     inputString="";
-//    Serial.println(readBatteryMillivolts());
+    //Serial.println(readBatteryMillivolts());
   }
-batteryLevel = readBatteryMillivolts();
+  batteryLevel = readBatteryMillivolts();
   if(batteryLevel<=(battery_low-100) && !usbPowerPresent())
   { 
     if(!buzzer.isPlaying())
@@ -112,6 +118,36 @@ batteryLevel = readBatteryMillivolts();
       //Serial.println("Hello");
       pidActive = false;
   }
+  
+  proxSensors.read();
+  if (int(currentMillis - previousSensorInterval) >= sensorInterval ) {   
+    previousSensorInterval = currentMillis;
+    // NEED TO SET JUMPERS TO WORK PROPERLY
+    mySerial.print("S,");
+    mySerial.print((byte)zumoID);
+    mySerial.print((byte)proxSensors.countsLeftWithLeftLeds());
+    mySerial.print((byte)proxSensors.countsLeftWithRightLeds());
+    mySerial.print((byte)proxSensors.countsFrontWithLeftLeds());
+    mySerial.print((byte)proxSensors.countsFrontWithRightLeds());
+    mySerial.print((byte)proxSensors.countsRightWithLeftLeds());
+    mySerial.print((byte)proxSensors.countsRightWithRightLeds());
+    mySerial.print((byte)proxSensors.readBasicFront());
+    mySerial.print((byte)proxSensors.readBasicLeft());
+    mySerial.print((byte)proxSensors.readBasicRight()); 
+    mySerial.print('\n');
+    Serial.print("S,");
+    Serial.print((byte)proxSensors.countsLeftWithLeftLeds());
+    Serial.print((byte)proxSensors.countsLeftWithRightLeds());
+    Serial.print((byte)proxSensors.countsFrontWithLeftLeds());
+    Serial.print((byte)proxSensors.countsFrontWithRightLeds());
+    Serial.print((byte)proxSensors.countsRightWithLeftLeds());
+    Serial.print((byte)proxSensors.countsRightWithRightLeds());
+    Serial.print((byte)proxSensors.readBasicFront());
+    Serial.print((byte)proxSensors.readBasicLeft());
+    Serial.print((byte)proxSensors.readBasicRight()); 
+    Serial.print('\n');
+  }
+  
 }
 
 void interpretmySerialData(void) {
