@@ -1,4 +1,4 @@
-#define zumoID 1    //314==1, 528==2, 871==3
+#define zumoID 2    //314==1, 528==2, 871==3
 #define encoderRevCounts 1670   //ticks per revolution of wheel belt
 #define circumference 217   //mm //on the bassis a belt
 #define diameter_zumo 69  //mm  //taken out from circumference
@@ -19,9 +19,9 @@ int interval = 10; // in ms         // PID sample interval
 unsigned long currentMillis = 0;
 
 unsigned long timeOutPreviousMillis = 0;  //Velocity Time Out.
-int velocityTimeOut = 5000; //ms  // changing this will change the velocity time out        
+int velocityTimeOut = 1000; //ms  // changing this will change the velocity time out        
 
-int sensorInterval = 100; //ms
+int sensorInterval = 250; //ms
 int previousSensorInterval = 100; //ms
 
 
@@ -34,8 +34,8 @@ struct pidParam {   //structure for PID parameters
   double kd;
   };
   
-pidParam motorL = {1,0,0}; //giving initial values of PID for motor Left
-pidParam motorR = {1,0,0}; //giving initial values of PID for motor Right
+pidParam motorL = {0.8,1,0}; //giving initial values of PID for motor Left
+pidParam motorR = {0.8,1,0}; //giving initial values of PID for motor Right
 
 #include <PID_v1.h>
 double measuredVelL = 0, measuredVelR = 0;  //Our required
@@ -65,6 +65,10 @@ void setup() {
   pidL.SetMode(AUTOMATIC);
   pidR.SetMode(AUTOMATIC);
   proxSensors.initThreeSensors();
+//  uint16_t levels[] = {4, 9, 15, 23, 32, 43, 55, 69, 85, 102};
+  uint16_t levels[] = {2,4,8};
+  proxSensors.setBrightnessLevels(levels , sizeof(levels)/2 );
+proxSensors.read();
 }
 
 void loop() {
@@ -92,7 +96,7 @@ void loop() {
   else if(batteryLevel>=(battery_low+100) || usbPowerPresent())
   {  buzzer.stopPlaying();}
   
-  if (int(currentMillis - previousMillis) >= interval) { //timed  loop for measuring Velocities
+  if (long(currentMillis - previousMillis) >= interval) { //timed  loop for measuring Velocities
     previousMillis = currentMillis;
     encCurrL = encoders.getCountsAndResetLeft();  //encoderLeft
     encCurrR = encoders.getCountsAndResetRight(); //
@@ -100,9 +104,11 @@ void loop() {
     measuredVelL = float(distance1/interval)*circumference;
     float distance2 = (encCurrR/(float)encoderRevCounts)*1000;
     measuredVelR = float(distance2/interval)*circumference;
-  /*  Serial.print(measuredVelL);
+    Serial.print(millis());
     Serial.print(" , ");
-    Serial.println(measuredVelR);    */
+    Serial.print(measuredVelL);
+    Serial.print(" , ");
+    Serial.println(measuredVelR);    
     }
 
   if(pidActive){
@@ -119,33 +125,22 @@ void loop() {
       pidActive = false;
   }
   
-  proxSensors.read();
+
   if (int(currentMillis - previousSensorInterval) >= sensorInterval ) {   
     previousSensorInterval = currentMillis;
     // NEED TO SET JUMPERS TO WORK PROPERLY
+    proxSensors.read();
     mySerial.print("S,");
     mySerial.print((byte)zumoID);
     mySerial.print((byte)proxSensors.countsLeftWithLeftLeds());
-    mySerial.print((byte)proxSensors.countsLeftWithRightLeds());
+//    mySerial.print((byte)0);
     mySerial.print((byte)proxSensors.countsFrontWithLeftLeds());
     mySerial.print((byte)proxSensors.countsFrontWithRightLeds());
-    mySerial.print((byte)proxSensors.countsRightWithLeftLeds());
+//    mySerial.print((byte)0);
     mySerial.print((byte)proxSensors.countsRightWithRightLeds());
-    mySerial.print((byte)proxSensors.readBasicFront());
-    mySerial.print((byte)proxSensors.readBasicLeft());
-    mySerial.print((byte)proxSensors.readBasicRight()); 
+//    mySerial.print((byte)0);
     mySerial.print('\n');
-    Serial.print("S,");
-    Serial.print((byte)proxSensors.countsLeftWithLeftLeds());
-    Serial.print((byte)proxSensors.countsLeftWithRightLeds());
-    Serial.print((byte)proxSensors.countsFrontWithLeftLeds());
-    Serial.print((byte)proxSensors.countsFrontWithRightLeds());
-    Serial.print((byte)proxSensors.countsRightWithLeftLeds());
-    Serial.print((byte)proxSensors.countsRightWithRightLeds());
-    Serial.print((byte)proxSensors.readBasicFront());
-    Serial.print((byte)proxSensors.readBasicLeft());
-    Serial.print((byte)proxSensors.readBasicRight()); 
-    Serial.print('\n');
+
   }
   
 }
@@ -264,6 +259,10 @@ void mySerialRead(void)
       inputString += inChar;
       if (inChar == '\n') {
         stringComplete = true;
+      }
+      if(stringComplete==true && mySerial.available()){
+        stringComplete = false;
+        inputString = "";
       }
     }
   }

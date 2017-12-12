@@ -7,9 +7,10 @@ Kd =8;%5
 
 dt=0.20; %200ms
 
-distThresh = 0.1;
+distThresh = 0.08;
 
-defaultSpeed = 150;
+% defaultSpeed = 150;
+defaultSpeed = 80;
 
 persistent E_k;
 persistent e_k_1;
