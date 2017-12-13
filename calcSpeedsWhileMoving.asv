@@ -9,7 +9,7 @@ dt=0.20; %200ms
 distThresh = 0.08;
 
 % defaultSpeed = 150;
-defaultSpeed = 80;
+defaultSpeed = 60;
 
 persistent E_k;
 persistent e_k_1;
@@ -47,6 +47,7 @@ vRot = w;
 hasReached=0;
 
 
+turnFlags(i)=0; % ************** DANGER ***************
 if abs (e_k)  > deg2rad(5) && turnFlags(i) == 1 && dist > distThresh
 %     vLeft =  -e_k/abs(e_k)*50;
 %     vRight = +e_k/abs(e_k)*50;
@@ -60,6 +61,7 @@ elseif (dist > distThresh)
         vLeft=0;
         vRight=0;
     else
+        E_k(i)=0; % ******************** DANGER ************
     vLeft =  defaultSpeed-vRot;
     vRight = defaultSpeed+vRot;
     end
