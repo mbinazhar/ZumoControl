@@ -15,7 +15,7 @@ try
     % rosinit, IP of ROS MASTER, IP of MATLAB SYSTEMS, Node Name
     % Get system IP: system('ipconfig'), confirm Interface, WiFi/Ethernet
     rosinit('http://192.168.100.200:11311', 'NodeHost', '192.168.100.105')
-    poseSubscriber = rossubscriber('/robotsPose',@mubassirSubscriber);
+    poseSubscriber = rossubscriber('/robotsPose',@mubassirSubscriber);  
 catch
     display('ROS initialization error')
     rosshutdown

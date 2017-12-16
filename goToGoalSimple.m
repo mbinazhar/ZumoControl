@@ -67,7 +67,7 @@ while t>0
         
         addpoints(robotTrajectory(i),x,y);
 
-        [vLeft,vRight,hasReached] = calcSpeeds(i,x,y,theta,goal(point,1),goal(point,2))
+        [vLeft,vRight,hasReached] = calcSpeeds(i,x,y,theta,goal(point,1),goal(point,2)) % TURNS THEN MOVES WHILE TURNING
         sendSpeedsCharacterWise(s,i,round(vLeft),round(vRight));
         
 %         sprintf('Robot=%.1f , x=%.2f , y=%.2f, t=%.2f, vLeft=%.1f , vRight=%.1f',i,x,y,theta,vLeft,vRight)

@@ -1,4 +1,4 @@
-#define zumoID 2    //314==1, 528==2, 871==3
+#define zumoID 3    //314==1, 528==2, 871==3
 #define encoderRevCounts 1670   //ticks per revolution of wheel belt
 #define circumference 217   //mm //on the bassis a belt
 #define diameter_zumo 69  //mm  //taken out from circumference
