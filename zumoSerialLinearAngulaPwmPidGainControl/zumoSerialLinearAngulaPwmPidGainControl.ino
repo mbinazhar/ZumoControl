@@ -112,10 +112,18 @@ void loop() {
     }
 
   if(pidActive){
+      pidL.SetMode(AUTOMATIC);
+      pidR.SetMode(AUTOMATIC);
       pidL.Compute();
       pidR.Compute();
       motors.setLeftSpeed(pwmL);
       motors.setRightSpeed(pwmR);
+  }
+  else
+  {
+      pidL.SetMode(MANUAL);
+      pidR.SetMode(MANUAL);
+      pwmL=0;pwmR=0;
   }
 
   if (int(currentMillis - timeOutPreviousMillis) >= velocityTimeOut ) {  // Break Velocity after Certain Time.

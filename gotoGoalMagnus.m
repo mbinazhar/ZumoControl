@@ -61,8 +61,10 @@ PROGRESS_MADE=1;
 UT_theta=[90 , 5 , -5 ,  -90];
 UT_theta=UT_theta.*180/pi;  %conversion from degrees to radians
 
-UT_x_loc=[-.05 , 0  , 0 , .05];
-UT_y_loc=[ 0   , .05,.05,  0 ];
+% UT_x_loc=[-.05 , 0  , 0 , .05];
+% UT_y_loc=[ 0   , .05,.05,  0 ];
+UT_x_loc=[.04  , .05,.05 , .04 ];
+UT_y_loc=[.05  ,   0, 0  , .05 ];
 
 d0=2;
 
@@ -139,6 +141,13 @@ for i=1:simulation_time
         else
             distance_to_obstacle_UT(UTsensor,i)= 4-temp;
         end
+        
+        if i>1
+        if distance_to_obstacle_UT(UTsensor,i-1) == 1 && distance_to_obstacle_UT(UTsensor,i) == 0 % in case there is steep drop
+            distance_to_obstacle_UT(UTsensor,i) = 1;
+        end
+        end
+        
     end
     
 
@@ -180,8 +189,8 @@ for i=1:simulation_time
     %     sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<0.3)
      % Thresholds
     
-    DISTANCE_FOR_ACTIVATING_OA_GTG=2.5;
-    DISTANCE_FOR_ACTIVATING_DANGER_OA=1.5;
+    DISTANCE_FOR_ACTIVATING_OA_GTG= 3.5; %2.5;
+    DISTANCE_FOR_ACTIVATING_DANGER_OA= 2.5;% %1.5;
     %DISTANCE_FOR_ACTIVATING_DANGER_OA<0.5;
     
     
@@ -222,12 +231,18 @@ for i=1:simulation_time
         
         if PROGRESS_MADE==1
             token=3; %'Danger_OA';
+            
             disp('I am in Danger_OA');
         elseif PROGRESS_MADE==0
             token=4;
             disp('I am in Follow_Wall');
         end
-          
+  
+        
+    end
+    
+    if token == 3 || token ==2 || token ==1
+        token=4; %'Danger_OA', OA and OA_GTG are overridden
     end
 
     %--------------------------------------------------------------------
@@ -437,22 +452,7 @@ for i=1:simulation_time
         
     end
     
-    %-----------------------------------------------------------------
-        %                  Code for plotting the vectors in separate figure
-        %-----------------------------------------------------------------
-
-        
-        %First vector will be drawn in RED colour [OA_Vector]
-        %Fourth vector will be drawn in GREEN colour [GTG_Vector]
-        
-        figure(2);
-        grid on;
-        plot([0 OA_norm_vector(1,i)], [0 OA_norm_vector(2,i)] ,'r' );
-        axis([-1 1 -1 1]); axis square;hold on;
-        plot([0 ufw_RIGHT(1)],[0  ufw_RIGHT(2)], 'k-.'); 
-        plot([0 ufw_LEFT(1)] ,[0  ufw_LEFT(2)] , 'k:');     
-        plot([0 GTG_norm_vector(1,i)],[0  GTG_norm_vector(2,i)], 'g');
-        hold off;
+   
        
     %--------------------------------------------------------------------
     %--------------------------------------------------------------------
@@ -488,7 +488,25 @@ for i=1:simulation_time
     %     theta_error_modified(i)=atan2(cos(theta_error(i)),sin(theta_error(i)));
     distance_error(i)=sqrt((robot_y_pos(i)-y_goal)^2+(robot_x_pos(i)-x_goal)^2); % *** COMMENT - BECAUSE THIS IS FINAL GOAL ??? PROGRESS POINT?
     
-    
+   
+     %-----------------------------------------------------------------
+        %                  Code for plotting the vectors in separate figure
+        %-----------------------------------------------------------------
+
+        
+        %First vector will be drawn in RED colour [OA_Vector]
+        %Fourth vector will be drawn in GREEN colour [GTG_Vector]
+        
+        figure(2);
+        grid on;
+        plot([0 OA_norm_vector(1,i)], [0 OA_norm_vector(2,i)] ,'r' );
+        axis([-1 1 -1 1]); axis square;hold on;
+        plot([0 ufw_RIGHT(1)],[0  ufw_RIGHT(2)], 'k-.'); 
+        plot([0 ufw_LEFT(1)] ,[0  ufw_LEFT(2)] , 'k:');     
+        plot([0 GTG_norm_vector(1,i)],[0  GTG_norm_vector(2,i)], 'g');
+        plot([0 .5*cos(theta_desired(i))],[0 .5*sin(theta_desired(i))],'b');
+        hold off;
+        
     %--------------------------------------------------------------------
     %--------------------------------------------------------------------
     %          PID Controller

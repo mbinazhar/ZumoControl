@@ -3,6 +3,8 @@ global zumoPose
 
 initZigbee
 
+selectedRobot=3;
+
 color = 'kbgrcmy'; colorVal=1;
 
 X = 1;
@@ -53,7 +55,7 @@ while t>0
     
     
 %     for i = 1:noOfRobots
-    for i = 2:2
+    for i = selectedRobot:selectedRobot
         
         x = zumoPose(i,X);
         y = zumoPose(i,Y);
