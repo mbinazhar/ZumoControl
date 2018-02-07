@@ -48,6 +48,7 @@ hasReached=0;
 
 
 turnFlags(i)=0; % ************** DANGER ***************
+
 if abs (e_k)  > deg2rad(5) && turnFlags(i) == 1 && dist > distThresh
 %     vLeft =  -e_k/abs(e_k)*50;
 %     vRight = +e_k/abs(e_k)*50;
@@ -98,7 +99,7 @@ end
 % end
 
 
-% vLeft=round(vLeft);
-% vRight=round(vRight);
+vLeft=round(vLeft);
+vRight=round(vRight);
 end
 

@@ -1,7 +1,7 @@
 global zumoSensors
 global zumoPose
 
-selectedRobot=3;
+selectedRobot=[2 3];
 
 initZigbee
 
@@ -10,9 +10,16 @@ color = 'kbgrcmy'; colorVal=1;
 clear calcSpeeds
 clear calcSpeedsWhileMoving
 
-    x_goal=.65;     y_goal=.25;
+%     x_goal=.65;     y_goal=.25;
     
 %     x_goal=-.5;    y_goal= -.2 ;
+
+x_goal=[0,.65,-.5];     y_goal=[0,.25,-.2];
+
+% x_goal([2 3]) = x_goal([3 2]);y_goal([2 3]) = y_goal([3 2]); % UNCOMMENT
+% TO SWAP GOALS
+
+% x_goal=[0,-.5,-.5];     y_goal=[0,-.2,-.2];
     
 
 figure(2);grid on;
@@ -47,14 +54,14 @@ dt = 0.2;
 %Parameters to be initialized
 number_of_UT_sensors=4; 
 simulation_time=3000;
-v=zeros(1,simulation_time)*5;   %constant linear velocity
-u=zeros(1,simulation_time);
+v=zeros(3,simulation_time)*5;   %constant linear velocity
+u=zeros(3,simulation_time);
 u_Vec=[];
 u_bar=3;
 
 %New variable definition in ver # 4
-PROGRESS_POINT_x=zumoPose(selectedRobot,X); %Initial x-postion of P3DX in VREP
-PROGRESS_POINT_y=zumoPose(selectedRobot,Y);  %Initial y-postion of P3DX in VREP
+PROGRESS_POINT_x=zumoPose(1:3,X); %Initial x-postion of P3DX in VREP
+PROGRESS_POINT_y=zumoPose(1:3,Y);  %Initial y-postion of P3DX in VREP
 PROGRESS_MADE=1;
 
 %all the angles are in degrees
@@ -79,11 +86,14 @@ dt=0.25;   %sampling time is considered to be 0.25 second
 
 
 for i=1:simulation_time
-%     i
+tic;
+    %     i
 %     PROGRESS_MADE
+ for z = selectedRobot
+     
     %Transformation from unicycle to differntial drive
     if i<simulation_time
-        velocity=Transform_UC_DD([u(i) v(i)]); %
+        velocity=Transform_UC_DD([u(z,i) v(z,i)]); %
         vR=velocity(1);
         vL=velocity(2);
     elseif i==simulation_time
@@ -92,7 +102,7 @@ for i=1:simulation_time
     end
 
     %% SCALE VELOCITIES HERE FIRST
-    z = selectedRobot;
+    
     
     scalingFactor = 1000;
     vLeft = scalingFactor * vL;
@@ -142,11 +152,11 @@ for i=1:simulation_time
             distance_to_obstacle_UT(UTsensor,i)= 4-temp;
         end
         
-        if i>1
-        if distance_to_obstacle_UT(UTsensor,i-1) == 1 && distance_to_obstacle_UT(UTsensor,i) == 0 % in case there is steep drop
-            distance_to_obstacle_UT(UTsensor,i) = 1;
-        end
-        end
+%         if i>1
+%         if distance_to_obstacle_UT(UTsensor,i-1) == 1 && distance_to_obstacle_UT(UTsensor,i) == 0 % in case there is steep drop
+%             distance_to_obstacle_UT(UTsensor,i) = 1;
+%         end
+%         end
         
     end
     
@@ -163,15 +173,15 @@ for i=1:simulation_time
 
     
     if (i>2)
-        DISTANCE_TO_GOAL_FROM_PROGRESS_POINT=sqrt((PROGRESS_POINT_x-x_goal)^2+(PROGRESS_POINT_y-y_goal)^2);
-        DISTANCE_TO_GOAL_FROM_CURRENT_POSITION=sqrt((robot_x_pos(i)-x_goal)^2+(robot_y_pos(i)-y_goal)^2);
+        DISTANCE_TO_GOAL_FROM_PROGRESS_POINT=sqrt((PROGRESS_POINT_x(z)-x_goal(z) )^2+(PROGRESS_POINT_y(z)-y_goal(z) )^2);
+        DISTANCE_TO_GOAL_FROM_CURRENT_POSITION=sqrt((robot_x_pos(i)-x_goal(z) )^2+(robot_y_pos(i)-y_goal(z) )^2);
         
         if DISTANCE_TO_GOAL_FROM_CURRENT_POSITION <= DISTANCE_TO_GOAL_FROM_PROGRESS_POINT
-            PROGRESS_POINT_x=robot_x_pos(i);
-            PROGRESS_POINT_y=robot_y_pos(i);
+            PROGRESS_POINT_x(z)=robot_x_pos(i);
+            PROGRESS_POINT_y(z)=robot_y_pos(i);
         elseif DISTANCE_TO_GOAL_FROM_CURRENT_POSITION > DISTANCE_TO_GOAL_FROM_PROGRESS_POINT %if no progress is made then don't update the progress point
-            PROGRESS_POINT_x=PROGRESS_POINT_x;
-            PROGRESS_POINT_y=PROGRESS_POINT_y;
+            PROGRESS_POINT_x(z)=PROGRESS_POINT_x(z);
+            PROGRESS_POINT_y(z)=PROGRESS_POINT_y(z);
         end
         
         if DISTANCE_TO_GOAL_FROM_CURRENT_POSITION<DISTANCE_TO_GOAL_FROM_PROGRESS_POINT
@@ -195,7 +205,7 @@ for i=1:simulation_time
     
     
     
-    if  (abs(robot_x_pos(i)-x_goal)<0.05) && (abs(robot_y_pos(i)-y_goal)<0.05)
+    if  (abs(robot_x_pos(i)-x_goal(z) )<0.05) && (abs(robot_y_pos(i)-y_goal(z) )<0.05)
         token=-1;
         disp('I am at the goal');
     elseif sum(distance_to_obstacle_UT(:,i))==0  %i.e. there is no obstacle
@@ -253,8 +263,8 @@ for i=1:simulation_time
     
     %Go to Goal Vector
     
-    GTG_x_resultant(i)=-robot_x_pos(i)+x_goal;
-    GTG_y_resultant(i)=-robot_y_pos(i)+y_goal;
+    GTG_x_resultant(i)=-robot_x_pos(i)+x_goal(z);
+    GTG_y_resultant(i)=-robot_y_pos(i)+y_goal(z);
     GTG_vector(:,i)=[GTG_x_resultant(i);GTG_y_resultant(i)];
     
     %Normalizing GTG vectors
@@ -487,7 +497,7 @@ for i=1:simulation_time
     theta_error(i) = atan2(sin(theta_error(i)),cos(theta_error(i)));
     
     %     theta_error_modified(i)=atan2(cos(theta_error(i)),sin(theta_error(i)));
-    distance_error(i)=sqrt((robot_y_pos(i)-y_goal)^2+(robot_x_pos(i)-x_goal)^2); % *** COMMENT - BECAUSE THIS IS FINAL GOAL ??? PROGRESS POINT?
+    distance_error(i)=sqrt((robot_y_pos(i)-y_goal(z) )^2+(robot_x_pos(i)-x_goal(z) )^2); % *** COMMENT - BECAUSE THIS IS FINAL GOAL ??? PROGRESS POINT?
     
    
      %-----------------------------------------------------------------
@@ -498,15 +508,17 @@ for i=1:simulation_time
         %First vector will be drawn in RED colour [OA_Vector]
         %Fourth vector will be drawn in GREEN colour [GTG_Vector]
         
-        figure(2);
-        grid on;
-        plot([0 OA_norm_vector(1,i)], [0 OA_norm_vector(2,i)] ,'r' );
-        axis([-1 1 -1 1]); axis square;hold on;
-        plot([0 ufw_RIGHT(1)],[0  ufw_RIGHT(2)], 'k-.'); 
-        plot([0 ufw_LEFT(1)] ,[0  ufw_LEFT(2)] , 'k:');     
-        plot([0 GTG_norm_vector(1,i)],[0  GTG_norm_vector(2,i)], 'g');
-        plot([0 .5*cos(theta_desired(i))],[0 .5*sin(theta_desired(i))],'b');
-        hold off;
+%         figure(2);
+%         grid on;
+%         plot([0 .5*OA_norm_vector(1,i)], [0 .5*OA_norm_vector(2,i)] ,'r' );
+%         axis([-1 1 -1 1]); axis square;hold on;
+%         plot([0 ufw_RIGHT(1)],[0  ufw_RIGHT(2)], 'k-.'); 
+%         plot([0 ufw_LEFT(1)] ,[0  ufw_LEFT(2)] , 'k:');     
+%         plot([0 .5*GTG_norm_vector(1,i)],[0  .5*GTG_norm_vector(2,i)], 'g');
+%         plot([0 cos(theta_desired(i))],[0 sin(theta_desired(i))],'b');
+%         xlabel(sprintf('Robot:%d',z));
+%         legend('OA','','','GTG','desired','Location','NorthWestOutside');
+%         hold off;
         
     %--------------------------------------------------------------------
     %--------------------------------------------------------------------
@@ -516,35 +528,37 @@ for i=1:simulation_time
     
     if abs(theta_error(i))>0.11 && distance_error(i)>5e-2   %If the orientation error is large keep on rotating
         %              disp('I am in case 1');
-        u(i+1)=scalingFactor/500 *   6*theta_error(i) ;   %*exp(-abs(theta(error))*i);
-        v(i+1)=0.2;
+        u(z,i+1)=scalingFactor/500 *   6*theta_error(i) ;   %*exp(-abs(theta(error))*i);
+        v(z,i+1)=0.2;
     elseif abs(theta_error(i))<0.11 && distance_error(i)>10e-2
         %             u(i+1)=1*theta_error(i);
         %             v(i+1)=5*(distance_error(i));
         %             disp('I am in case 2');
-        u(i+1)=scalingFactor/500 *   4*theta_error(i);
-        v(i+1)=0.2;
+        u(z,i+1)=scalingFactor/500 *   4*theta_error(i);
+        v(z,i+1)=0.2;
     elseif abs(theta_error(i))<0.11 && distance_error(i)<8e-2
         %             disp('I am in case 3');
-        u(i+1)=0;
-        v(i+1)=0;
+        u(z,i+1)=0;
+        v(z,i+1)=0;
     end
     
     %--------------------------------------------------------------------
     
     if i==simulation_time-1
-        u(i+1)=0;
-        v(i+1)=0;
+        u(z,i+1)=0;
+        v(z,i+1)=0;
     end
     
     
-    pause(dt);
+    pause(dt); % Commented because plot update takes too long
     if(mod(i,1)==0)%     if(mod(i,10)==0)
         figure(1);
         drawnow
         %         pause();
     end
     
+ end
+ toc
 end  %end of the for loop
     
     

@@ -1,36 +1,11 @@
-global zumoSensors
-global zumoPose
+global sonar
 
-selectedRobot=3;
 
-initZigbee
-
-color = 'kbgrcmy'; colorVal=1;
-
-clear calcSpeeds
-clear calcSpeedsWhileMoving
-
-    x_goal=.65;     y_goal=.25;
-    
-%     x_goal=-.5;    y_goal= -.2 ;
+    x_goal=0;     y_goal=10;
     
 
 figure(2);grid on;
 axis([-1 1 -1 1]); axis square;
-figure(1);
-hold on; grid on;
-axis([-1.1 1.1 -1.1 1.1]); axis square;
-
-
-robotTrajectory = [animatedline('Color',color(colorVal),'LineWidth',2)];
-
-for i = 1: noOfRobots-1
-    colorVal = colorVal+1;
-    if(colorVal>7)
-        colorVal=1;
-    end
-    robotTrajectory = [robotTrajectory;animatedline('Color',color(colorVal),'LineWidth',2)];
-end
 
 
 
@@ -41,11 +16,11 @@ THETA_TOLERANCE = pi/20.0;
 GOAL_TOLERANCE  = 0.05;
 GOAL_PAUSE = 2;
 point = 1;
-dt = 0.2;
+
 
 
 %Parameters to be initialized
-number_of_UT_sensors=4; 
+number_of_UT_sensors=5; 
 simulation_time=3000;
 v=zeros(1,simulation_time)*5;   %constant linear velocity
 u=zeros(1,simulation_time);
@@ -53,18 +28,17 @@ u_Vec=[];
 u_bar=3;
 
 %New variable definition in ver # 4
-PROGRESS_POINT_x=zumoPose(selectedRobot,X); %Initial x-postion of P3DX in VREP
-PROGRESS_POINT_y=zumoPose(selectedRobot,Y);  %Initial y-postion of P3DX in VREP
+PROGRESS_POINT_x= 0; %Initial x-postion of P3DX in VREP
+PROGRESS_POINT_y= 0;  %Initial y-postion of P3DX in VREP
 PROGRESS_MADE=1;
 
 %all the angles are in degrees
-UT_theta=[90 , 5 , -5 ,  -90];
-UT_theta=UT_theta.*180/pi;  %conversion from degrees to radians
+UT_theta=[90 , 35 , 0 ,  -35 , -90];
+UT_theta=UT_theta.*pi/180;  %conversion from degrees to radians
 
-% UT_x_loc=[-.05 , 0  , 0 , .05];
-% UT_y_loc=[ 0   , .05,.05,  0 ];
-UT_x_loc=[.04  , .05,.05 , .04 ];
-UT_y_loc=[.05  ,   0, 0  , .05 ];
+UT_x_loc=[.28 , .36  , .40 ,  .36 , .28];
+
+UT_y_loc=[.21,  .16 ,  0  ,  -.16 , -.21];
 
 d0=2;
 
@@ -75,7 +49,8 @@ distance_to_obstacle_UT_for_OA=ones(number_of_UT_sensors,simulation_time);
 % distance_to_obstacle_Vec=[];
 distance_derivative=zeros(1,simulation_time);
 error=zeros(1,simulation_time);
-dt=0.25;   %sampling time is considered to be 0.25 second
+
+dt=1.25;   %sampling time is considered to be 0.25 second
 
 
 for i=1:simulation_time
@@ -92,76 +67,29 @@ for i=1:simulation_time
     end
 
     %% SCALE VELOCITIES HERE FIRST
-    z = selectedRobot;
+%     scalingFactor = 1000;
+%     vLeft = scalingFactor * vL;
+%     vRight = scalingFactor * vR;
     
-    scalingFactor = 1000;
-    vLeft = scalingFactor * vL;
-    vRight = scalingFactor * vR;
-    
-    sendSpeedsCharacterWise(s,z,round(vLeft),round(vRight));
+    sprintf('Sonar=%.1f,%.1f,%.1f,%.1f,%.1f , v=%.2f, w=%.1f',sonar,v(i),u(i))
+%      TwistvelocityPublish(v(i),u(i));
     
     %% ADD SENSOR CODE HERE
-        sensorAngles =          [90 , 5 , -5 ,  -90;...
-                                 90 , 7 , -7 ,  -90;...
-                                 90 , 12 , -12 ,-90]; 
-        sensorMarkers =         ['<' , 'o' , 'x' , '>'];
-        sensorColors =          ['g' , 'b' , 'r'];
-        sensorDistances =       [0.15 , 0.10 , 0.06;...
-                                 0.18 , 0.11 , 0.07;...
-                                 0.18 , 0.11 , 0.07;...
-                                 0.15 , 0.10 , 0.06];
-                             sensorDistances = sensorDistances';
-                             sensorDistances = sensorDistances + 0.04;
-                            
-        for sensorNo = 1:1:4
-            sensorValue = zumoSensors(z,sensorNo);
-            if sensorValue == 0
-                continue;
-            end
-            
-            x=zumoPose(z,X);
-            y=zumoPose(z,Y);
-            theta=zumoPose(z,THETA);
-            
-            markX = x + sensorDistances(sensorValue,sensorNo) * cos(theta+deg2rad(sensorAngles(sensorValue,sensorNo)));
-            markY = y + sensorDistances(sensorValue,sensorNo) * sin(theta+deg2rad(sensorAngles(sensorValue,sensorNo)));
-            plot(markX,markY,strcat(sensorColors(sensorValue),sensorMarkers(sensorNo)));
-        end
-        
-        %%
-%     distance_to_obstacle_UT(1,i)= 4-zumoSensors(z,1);
-%     distance_to_obstacle_UT(2,i)= 4-zumoSensors(z,2);
-%     distance_to_obstacle_UT(3,i)= 4-zumoSensors(z,3);
-%     distance_to_obstacle_UT(4,i)= 4-zumoSensors(z,4);
-
-    for UTsensor = 1:1:4
-        temp= zumoSensors(z,UTsensor);
-        if temp == 0
-            distance_to_obstacle_UT(UTsensor,i)= 0;
+    for UTsensor = 1:1:5
+        if(sonar(UTsensor) < 0.7)
+        distance_to_obstacle_UT(UTsensor,i)= sonar(UTsensor); % NEED A FILTER HERE
         else
-            distance_to_obstacle_UT(UTsensor,i)= 4-temp;
+            distance_to_obstacle_UT(UTsensor,i)=0;
         end
-        
-        if i>1
-        if distance_to_obstacle_UT(UTsensor,i-1) == 1 && distance_to_obstacle_UT(UTsensor,i) == 0 % in case there is steep drop
-            distance_to_obstacle_UT(UTsensor,i) = 1;
-        end
-        end
-        
     end
     
-
+    robot_x_pos(i)= 0;
+    robot_y_pos(i)= 0;
+    robot_theta(i)= deg2rad(90);
     
-    robot_x_pos(i)= zumoPose(z,X);
-    robot_y_pos(i)= zumoPose(z,Y);
-    robot_theta(i)= zumoPose(z,THETA);
-
-    addpoints(robotTrajectory(z),robot_x_pos(i),robot_y_pos(i));
-
-    sprintf('Robot=%.1f , x=%.2f , y=%.2f, t=%.2f, vLeft=%.1f , vRight=%.1f , Sens=%s',z,robot_x_pos(i),robot_y_pos(i),robot_theta(i),vLeft,vRight,num2str(zumoSensors(z,:)))
+%     sprintf('Robot=%.1f , x=%.2f , y=%.2f, t=%.2f, vLeft=%.1f , vRight=%.1f , Sens=%s',z,robot_x_pos(i),robot_y_pos(i),robot_theta(i),vLeft,vRight,num2str(zumoSensors(z,:)))
     
 
-    
     if (i>2)
         DISTANCE_TO_GOAL_FROM_PROGRESS_POINT=sqrt((PROGRESS_POINT_x-x_goal)^2+(PROGRESS_POINT_y-y_goal)^2);
         DISTANCE_TO_GOAL_FROM_CURRENT_POSITION=sqrt((robot_x_pos(i)-x_goal)^2+(robot_y_pos(i)-y_goal)^2);
@@ -181,6 +109,8 @@ for i=1:simulation_time
         end
     end
     
+    PROGRESS_MADE = 1;
+    
     
 %-----------------------------------------------------------------------
     %       Coding the FSM for navigation
@@ -189,8 +119,8 @@ for i=1:simulation_time
     %     sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<0.3)
      % Thresholds
     
-    DISTANCE_FOR_ACTIVATING_OA_GTG= 1.5; %3.5; for follow wall **** FOR ACTIVATING OA ??? MY GUESS: THIS IS UPPER BOUND
-    DISTANCE_FOR_ACTIVATING_DANGER_OA= 0.5;% %2.5; 0.5 mean disabled
+    DISTANCE_FOR_ACTIVATING_OA_GTG= .5; %3.5; for follow wall **** FOR ACTIVATING OA ??? MY GUESS: THIS IS LOWER BOUND OF OA_GTG
+    DISTANCE_FOR_ACTIVATING_DANGER_OA= 0.35;% %2.5; 0.5 mean disabled
     %DISTANCE_FOR_ACTIVATING_DANGER_OA<0.5;
     
     
@@ -292,7 +222,7 @@ for i=1:simulation_time
     end
     
     %Calculate a vector from the transformed point to the robot's center
-    UT_sensor_gains = [.8 1 1 .8];
+    UT_sensor_gains = [1 1 1 1 1];
     u_i = (OA_UT_vectors_WF(1:2,:)-repmat([ robot_x_pos(i); robot_y_pos(i)],1,number_of_UT_sensors))*diag(UT_sensor_gains);
     %      u_ao = sum(u_i,2);
     
@@ -316,8 +246,8 @@ for i=1:simulation_time
     %                      Blended Controller
     %-------------------------------------------------------------------
     %--------------------------------------------------------------------
-%     alpha=0.75;
-    alpha=0.6;
+    alpha=0.75;
+%     alpha=0.6;
    
     
     OA_GTG_vector(:,i)=alpha*OA_norm_vector(:,i)+(1-alpha)*GTG_norm_vector(:,i);
@@ -358,7 +288,7 @@ for i=1:simulation_time
         %the wall is on the right
         % Calculating p1 and p2 vector
         %             disp('I am in case  2 token 4');
-        for k=3:1:4
+        for k=4:1:5
             R1=[cos(robot_theta(i)) -sin(robot_theta(i))  robot_x_pos(i);
                 sin(robot_theta(i))  cos(robot_theta(i))   robot_y_pos(i);
                 0                 0                1];
@@ -508,6 +438,18 @@ for i=1:simulation_time
         plot([0 .5*cos(theta_desired(i))],[0 .5*sin(theta_desired(i))],'b');
         hold off;
         
+        figure(1);
+        grid on;
+        for UTsensor = 1:1:5
+        if UTsensor ==1
+            plot([0 distance_to_obstacle_UT(UTsensor,i)*cos(UT_theta(UTsensor)+pi/2)], [0 distance_to_obstacle_UT(UTsensor,i)*sin(UT_theta(UTsensor)+pi/2)] ,'r' );
+        axis([-1 1 -1 1]); axis square;hold on;
+        else
+        plot([0 distance_to_obstacle_UT(UTsensor,i)*cos(UT_theta(UTsensor)+pi/2)], [0 distance_to_obstacle_UT(UTsensor,i)*sin(UT_theta(UTsensor)+pi/2)] ,'r' );
+        end
+        end
+        hold off;
+        
     %--------------------------------------------------------------------
     %--------------------------------------------------------------------
     %          PID Controller
@@ -516,14 +458,14 @@ for i=1:simulation_time
     
     if abs(theta_error(i))>0.11 && distance_error(i)>5e-2   %If the orientation error is large keep on rotating
         %              disp('I am in case 1');
-        u(i+1)=scalingFactor/500 *   6*theta_error(i) ;   %*exp(-abs(theta(error))*i);
-        v(i+1)=0.2;
+        u(i+1)= 1*theta_error(i) ;   %*exp(-abs(theta(error))*i);
+        v(i+1)=0.08;
     elseif abs(theta_error(i))<0.11 && distance_error(i)>10e-2
         %             u(i+1)=1*theta_error(i);
         %             v(i+1)=5*(distance_error(i));
         %             disp('I am in case 2');
-        u(i+1)=scalingFactor/500 *   4*theta_error(i);
-        v(i+1)=0.2;
+        u(i+1)= 0.5*theta_error(i);
+        v(i+1)=0.08;
     elseif abs(theta_error(i))<0.11 && distance_error(i)<8e-2
         %             disp('I am in case 3');
         u(i+1)=0;
@@ -540,7 +482,7 @@ for i=1:simulation_time
     
     pause(dt);
     if(mod(i,1)==0)%     if(mod(i,10)==0)
-        figure(1);
+%         figure(1);
         drawnow
         %         pause();
     end
@@ -551,3 +493,13 @@ end  %end of the for loop
 
 
 
+
+
+
+
+
+
+
+
+
+        
