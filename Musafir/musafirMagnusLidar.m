@@ -1,7 +1,16 @@
+%250 deg heading i.e. 110 points towards lab soldering station
+% X is NORTH
 global sonar
+global lidar
+global heading
 
-x_goal=0;     y_goal=10;
-   
+% x_goal=0;     y_goal=10;
+% for 110 deg
+
+% x_goal=-3.42;     y_goal=9.39;
+targetHeading=295;
+x_goal = 10* cos(deg2rad(360 - targetHeading));
+y_goal = 10* sin(deg2rad(360 - targetHeading));
 
 figure(2);grid on;
 axis([-1 1 -1 1]); axis square;
@@ -35,9 +44,11 @@ PROGRESS_MADE=1;
 UT_theta=[90 , 35 , 0 ,  -35 , -90];
 UT_theta=UT_theta.*pi/180;  %conversion from degrees to radians
 
-UT_x_loc=[.28 , .36  , .40 ,  .36 , .28];
+UT_x_loc=[.35 , .35  , .35 ,  .35 , .35];
 
-UT_y_loc=[.21,  .16 ,  0  ,  -.16 , -.21];
+UT_y_loc=[0,  0 ,  0  ,  0 , 0];
+
+
 
 d0=2;
 
@@ -70,13 +81,13 @@ for i=1:simulation_time
 %     vLeft = scalingFactor * vL;
 %     vRight = scalingFactor * vR;
     
-    sprintf('Sonar=%.1f,%.1f,%.1f,%.1f,%.1f , v=%.2f, w=%.1f',sonar,v(i),u(i))
-%      TwistvelocityPublish(v(i),u(i));
+    sprintf('Lidar=%.1f,%.1f,%.1f,%.1f,%.1f , v=%.2f, w=%.1f',lidar,v(i),u(i))
+      TwistvelocityPublish(v(i),u(i));
     
     %% ADD SENSOR CODE HERE
     for UTsensor = 1:1:5
-        if(sonar(UTsensor) < 6) 
-        distance_to_obstacle_UT(UTsensor,i)= (sonar(UTsensor) ); % NEED A FILTER HERE
+        if(lidar(UTsensor) < .3) 
+        distance_to_obstacle_UT(UTsensor,i)= (lidar(UTsensor) ); % NEED A FILTER HERE
         else
             distance_to_obstacle_UT(UTsensor,i)=0;
         end
@@ -84,7 +95,7 @@ for i=1:simulation_time
     
     robot_x_pos(i)= 0;
     robot_y_pos(i)= 0;
-    robot_theta(i)= deg2rad(90);
+    robot_theta(i)= atan2( sin(deg2rad(360 - heading)),cos(deg2rad(360 - heading)));
     
 %     sprintf('Robot=%.1f , x=%.2f , y=%.2f, t=%.2f, vLeft=%.1f , vRight=%.1f , Sens=%s',z,robot_x_pos(i),robot_y_pos(i),robot_theta(i),vLeft,vRight,num2str(zumoSensors(z,:)))
     
@@ -221,7 +232,7 @@ for i=1:simulation_time
     end
     
     %Calculate a vector from the transformed point to the robot's center
-    UT_sensor_gains = [.5 1 1 1 .5];
+    UT_sensor_gains = [1.1 1.5 1 1.5 1.1];
     u_i = (OA_UT_vectors_WF(1:2,:)-repmat([ robot_x_pos(i); robot_y_pos(i)],1,number_of_UT_sensors))*diag(UT_sensor_gains);
     %      u_ao = sum(u_i,2);
     
@@ -442,7 +453,7 @@ for i=1:simulation_time
         for UTsensor = 1:1:5
         if UTsensor ==1
             plot([0 distance_to_obstacle_UT(UTsensor,i)*cos(UT_theta(UTsensor)+pi/2)], [0 distance_to_obstacle_UT(UTsensor,i)*sin(UT_theta(UTsensor)+pi/2)] ,'r' );
-        axis([-5 5 -.1 10]); axis square;hold on;
+        axis([-5 5 -5 5]); axis square;hold on;
         else
         plot([0 distance_to_obstacle_UT(UTsensor,i)*cos(UT_theta(UTsensor)+pi/2)], [0 distance_to_obstacle_UT(UTsensor,i)*sin(UT_theta(UTsensor)+pi/2)] ,'r' );
         end
@@ -458,13 +469,13 @@ for i=1:simulation_time
     if abs(theta_error(i))>0.11 && distance_error(i)>5e-2   %If the orientation error is large keep on rotating
         %              disp('I am in case 1');
         u(i+1)= 1*theta_error(i) ;   %*exp(-abs(theta(error))*i);
-        v(i+1)=0.08;
+        v(i+1)=0.1;
     elseif abs(theta_error(i))<0.11 && distance_error(i)>10e-2
         %             u(i+1)=1*theta_error(i);
         %             v(i+1)=5*(distance_error(i));
         %             disp('I am in case 2');
         u(i+1)= 0.5*theta_error(i);
-        v(i+1)=0.08;
+        v(i+1)=0.1;
     elseif abs(theta_error(i))<0.11 && distance_error(i)<8e-2
         %             disp('I am in case 3');
         u(i+1)=0;
