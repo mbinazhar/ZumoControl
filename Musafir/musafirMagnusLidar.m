@@ -1,6 +1,6 @@
 %250 deg heading i.e. 110 points towards lab soldering station
 % X is NORTH
-global sonar
+% global sonar
 global lidar
 global heading
 
@@ -9,6 +9,7 @@ global heading
 
 % x_goal=-3.42;     y_goal=9.39;
 targetHeading=295;
+% targetHeading=0;
 x_goal = 10* cos(deg2rad(360 - targetHeading));
 y_goal = 10* sin(deg2rad(360 - targetHeading));
 
@@ -41,7 +42,8 @@ PROGRESS_POINT_y= 0;  %Initial y-postion of P3DX in VREP
 PROGRESS_MADE=1;
 
 %all the angles are in degrees
-UT_theta=[90 , 35 , 0 ,  -35 , -90];
+% UT_theta=[90 , 35 , 0 ,  -35 , -90];
+UT_theta=[-90 -35 0 35 90];
 UT_theta=UT_theta.*pi/180;  %conversion from degrees to radians
 
 UT_x_loc=[.35 , .35  , .35 ,  .35 , .35];
@@ -82,11 +84,11 @@ for i=1:simulation_time
 %     vRight = scalingFactor * vR;
     
     sprintf('Lidar=%.1f,%.1f,%.1f,%.1f,%.1f , v=%.2f, w=%.1f',lidar,v(i),u(i))
-      TwistvelocityPublish(v(i),u(i));
+%       TwistvelocityPublish(v(i),u(i));
     
     %% ADD SENSOR CODE HERE
     for UTsensor = 1:1:5
-        if(lidar(UTsensor) < .3) 
+        if(lidar(UTsensor) < 7) 
         distance_to_obstacle_UT(UTsensor,i)= (lidar(UTsensor) ); % NEED A FILTER HERE
         else
             distance_to_obstacle_UT(UTsensor,i)=0;
@@ -129,8 +131,8 @@ for i=1:simulation_time
     %     sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<0.3)
      % Thresholds
     
-    DISTANCE_FOR_ACTIVATING_OA_GTG= .5; %3.5; for follow wall **** FOR ACTIVATING OA ??? MY GUESS: THIS IS LOWER BOUND OF OA_GTG
-    DISTANCE_FOR_ACTIVATING_DANGER_OA= 0.35;% %2.5; 0.5 mean disabled
+    DISTANCE_FOR_ACTIVATING_OA_GTG= 1.5; %for follow wall**** OA ACTIVATES BELOW THIS VALUE ??? MY GUESS: THIS IS LOWER BOUND OF OA_GTG
+    DISTANCE_FOR_ACTIVATING_DANGER_OA= 0.6;% Now this activates only OA
     %DISTANCE_FOR_ACTIVATING_DANGER_OA<0.5;
     
     
@@ -138,18 +140,13 @@ for i=1:simulation_time
     if  (abs(robot_x_pos(i)-x_goal)<0.05) && (abs(robot_y_pos(i)-y_goal)<0.05)
         token=-1;
         disp('I am at the goal');
-    elseif sum(distance_to_obstacle_UT(:,i))==0  %i.e. there is no obstacle
+%     elseif sum(distance_to_obstacle_UT(:,i))==0  %i.e. there is no obstacle
+    elseif min(distance_to_obstacle_UT(:,i)) > DISTANCE_FOR_ACTIVATING_OA_GTG  %i.e. there is no obstacle
         token=0; %'GTG'
         disp('I am in GTG');
-    elseif sum(distance_to_obstacle_UT(:,i))~=0 && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<DISTANCE_FOR_ACTIVATING_OA_GTG)==0
-        %         %The first condition implies that if any one of the UT sensors have
-        %         %detetcted an obstacle then the condition is TRUE. The second
-        %         %condition says that remove all the ZEROS from UT sensors data
-        %         %array and make sure that the robot's minimum distance to the obstacle is greater than DISTANCE_FOR_ACTIVATING_OA_GTG. If
-        %         %the robot move closer (i.e.<DISTANCE_FOR_ACTIVATING_OA_GTG) to the obstacle then this condition is FALSE
-        token=1; %'OA_GTG';
-        disp('I am in OA_GTG');
-    elseif sum(distance_to_obstacle_UT(:,i))~=0 && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<DISTANCE_FOR_ACTIVATING_OA_GTG)~=0  && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<DISTANCE_FOR_ACTIVATING_DANGER_OA)==0
+
+%     elseif sum(distance_to_obstacle_UT(:,i))~=0 && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<DISTANCE_FOR_ACTIVATING_OA_GTG)~=0  && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<DISTANCE_FOR_ACTIVATING_DANGER_OA)==0
+elseif min(distance_to_obstacle_UT(:,i)) <= DISTANCE_FOR_ACTIVATING_DANGER_OA
         %The first condition is the same as in the previous case. 
         % The second consition says that 
         % the robot has approached near the obstacle i.e. any one of the UT sensors reports a
@@ -163,6 +160,15 @@ for i=1:simulation_time
 %         end
              token=2; %'OA';
              disp('I am in OA');
+             %     elseif sum(distance_to_obstacle_UT(:,i))~=0 && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<DISTANCE_FOR_ACTIVATING_OA_GTG)==0
+        elseif min(distance_to_obstacle_UT(:,i)) <= DISTANCE_FOR_ACTIVATING_OA_GTG
+        %         %The first condition implies that if any one of the UT sensors have
+        %         %detetcted an obstacle then the condition is TRUE. The second
+        %         %condition says that remove all the ZEROS from UT sensors data
+        %         %array and make sure that the robot's minimum distance to the obstacle is greater than DISTANCE_FOR_ACTIVATING_OA_GTG. If
+        %         %the robot move closer (i.e.<DISTANCE_FOR_ACTIVATING_OA_GTG) to the obstacle then this condition is FALSE
+        token=1; %'OA_GTG';
+        disp('I am in OA_GTG');
     elseif sum(distance_to_obstacle_UT(:,i))~=0 && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<DISTANCE_FOR_ACTIVATING_DANGER_OA)~=0
         %The first condition is the same as in the first case.
         % the robot has approached very near to the obstacle i.e. any one of the UT sensors reports a 

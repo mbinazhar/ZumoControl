@@ -1,0 +1,37 @@
+<launch>
+	<arg name="angular_velocity" value="0.5" />
+	<arg name="linear_velocity" value="0.5" />
+
+	<arg name="first_lat" value="24.7941082" />
+	<arg name="first_lon" value="67.1346676" />
+	<arg name="second_lat" value="24.7942253" />
+  	<arg name="second_lon" value="67.1345479" />
+	<arg name="third_lat" value="24.7943959" />
+ 	<arg name="third_lon" value="67.1345609" />
+	<arg name="fourth_lat" value="24.7941139" />
+  	<arg name="fourth_lon" value="67.1347268" />
+
+  	<arg name="stop_lat" value="0" />
+  	<arg name="stop_lon" value="0" />
+
+	<node name="angle_node" pkg="musafir_ros" type="angle.py"/>
+	<node name="set_heading_node" pkg="musafir_ros" type="setHeading.py"/>
+
+	<param name="/gps_waypoint/first_lat" value="$(arg first_lat)" type="double" />
+	<param name="/gps_waypoint/first_lon" value="$(arg first_lon)" type="double" />
+	<param name="/gps_waypoint/second_lat" value="$(arg second_lat)" type="double" />
+	<param name="/gps_waypoint/second_lon" value="$(arg second_lon)" type="double" />
+	<param name="/gps_waypoint/third_lat" value="$(arg third_lat)" type="double" />
+	<param name="/gps_waypoint/third_lon" value="$(arg third_lon)" type="double" />
+	<param name="/gps_waypoint/fourth_lat" value="$(arg fourth_lat)" type="double" />
+	<param name="/gps_waypoint/fourth_lon" value="$(arg fourth_lon)" type="double" />
+
+	<param name="/gps_waypoint/desired_lat" value="$(arg stop_lat)" type="double" />
+	<param name="/gps_waypoint/desired_lon" value="$(arg stop_lon)" type="double" />
+	<param name="/gps_waypoint/initial_lat" value="$(arg stop_lat)" type="double" />
+	<param name="/gps_waypoint/initial_lon" value="$(arg stop_lon)" type="double" />
+
+	<param name="/robot/linear_velocity" value="$(arg linear_velocity)" type="double" />
+	<param name="/robot/angular_velocity" value="$(arg angular_velocity)" type="double" />
+
+</launch>
