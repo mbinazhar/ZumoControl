@@ -1,6 +1,8 @@
 % clear all; close all; clc;
 rosshutdown;delete(instrfindall);
 
+global LatLon;
+global heading;
 global sonar;
 global lwheel_pub;
 global rwheel_pub;
@@ -12,12 +14,11 @@ try
     % rosinit, IP of ROS MASTER, IP of MATLAB SYSTEMS, Node Name
     % Get system IP: system('ipconfig'), confirm Interface, WiFi/Ethernet
     rosinit('http://192.168.100.123:11311', 'NodeHost', '192.168.100.105')
-    sonar0_sub = rossubscriber('/sonar0',@sonar0Subscriber);
-	sonar1_sub = rossubscriber('/sonar1',@sonar1Subscriber);
-	sonar2_sub = rossubscriber('/sonar2',@sonar2Subscriber);
-	sonar3_sub = rossubscriber('/sonar3',@sonar3Subscriber);
-	sonar4_sub = rossubscriber('/sonar4',@sonar4Subscriber);
-%     test_sub = rossubscriber('/lwheel_desired_vel',@testSubscriber);
+    sonar0_sub = rossubscriber('/sonar',@sonarSubscriber);
+    mag_sub = rossubscriber('/current_angle',@magSubscriber);
+    gps_sub = rossubscriber('/gps/fix',@gpsSubscriber);
+    
+    
     matlab_Wheelvelocity = robotics.ros.Node('/matlab_veloWheel');
     lwheel_pub = robotics.ros.Publisher(matlab_Wheelvelocity,'/lwheel_desired_vel','std_msgs/Int16');
     rwheel_pub = robotics.ros.Publisher(matlab_Wheelvelocity,'/rwheel_desired_vel','std_msgs/Int16');

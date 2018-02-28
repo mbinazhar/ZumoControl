@@ -84,7 +84,7 @@ for i=1:simulation_time
 %     vRight = scalingFactor * vR;
     
     sprintf('Lidar=%.1f,%.1f,%.1f,%.1f,%.1f , v=%.2f, w=%.1f',lidar,v(i),u(i))
-%       TwistvelocityPublish(v(i),u(i));
+      TwistvelocityPublish(v(i),u(i));
     
     %% ADD SENSOR CODE HERE
     for UTsensor = 1:1:5
