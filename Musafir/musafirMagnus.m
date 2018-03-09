@@ -13,6 +13,8 @@ targetHeading=295;
 x_goal = 10* cos(deg2rad(360 - targetHeading));
 y_goal = 10* sin(deg2rad(360 - targetHeading));
 
+token=0;
+
 figure(2);grid on;
 axis([-1 1 -1 1]); axis square;
 
@@ -34,7 +36,7 @@ simulation_time=3000;
 v=zeros(1,simulation_time)*5;   %constant linear velocity
 u=zeros(1,simulation_time);
 u_Vec=[];
-u_bar=3;
+u_bar=2.5;
 
 %New variable definition in ver # 4
 PROGRESS_POINT_x= 0; %Initial x-postion of P3DX in VREP
@@ -89,10 +91,10 @@ for i=1:simulation_time
     
     %% ADD SENSOR CODE HERE
     for UTsensor = 1:1:5
-        if(sonar(UTsensor) < 7 * 1023) 
+        if(sonar(UTsensor) < 1 * 1023) 
         distance_to_obstacle_UT(UTsensor,i)= (sonar(UTsensor) / 1023 *5 ); % NEED A FILTER HERE
         else
-            distance_to_obstacle_UT(UTsensor,i)=0;
+            distance_to_obstacle_UT(UTsensor,i)=1;
         end
     end
     
@@ -132,26 +134,44 @@ for i=1:simulation_time
     %     sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<0.3)
      % Thresholds
     
-    DISTANCE_FOR_ACTIVATING_OA_GTG= 1.5; %for follow wall**** OA ACTIVATES BELOW THIS VALUE ??? MY GUESS: THIS IS LOWER BOUND OF OA_GTG
-    DISTANCE_FOR_ACTIVATING_DANGER_OA= 0.6;% Now this activates only OA
-    %DISTANCE_FOR_ACTIVATING_DANGER_OA<0.5;
+    DISTANCE_FOR_ACTIVATING_OA=1.0;
+    MINIMUM_DISTANCE_FROM_THE_WALL=0.5;   %Used in follow wall 'dfw' variable
+    DISTANCE_FOR_ACTIVATING_DANGER_OA=0.2;
     
     
     
-    if  (abs(robot_x_pos(i)-x_goal)<0.05) && (abs(robot_y_pos(i)-y_goal)<0.05)
-        token=-1;
-        disp('I am at the goal');
-%     elseif sum(distance_to_obstacle_UT(:,i))==0  %i.e. there is no obstacle
-    elseif min(distance_to_obstacle_UT(:,i)) > DISTANCE_FOR_ACTIVATING_OA_GTG  %i.e. there is no obstacle
+    %------------------------------------------------------------------------
+  % Conditions for transition from one state to another
+  % The conditions have been modifed for GTG_Mag_.....ver 5.0
+  %------------------------------------------------------------------------
+  
+    if  (abs(robot_x_pos(i)-x_goal)<0.5) && (abs(robot_y_pos(i)-y_goal)<0.5)
+        token=-1; %If the robot is near the goal (with certain error tolerance of 0.5)
+        status='I am at the goal';
+%         STATUS_MESSAGES(1,i)=status;
+        disp(status);
+%     elseif sum(distance_to_obstacle_UT(:,i))==number_of_UT_sensors  %i.e. there is no obstacle
+    elseif sum(distance_to_obstacle_UT(:,i))==number_of_UT_sensors  %i.e. there is no obstacle
         token=0; %'GTG'
-        disp('I am in GTG');
+        status='I am in GTG';
+%         STATUS_MESSAGES(1,i)=status;
+        disp(status);
+    elseif sum(distance_to_obstacle_UT(:,i))~=number_of_UT_sensors && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=1,i)<DISTANCE_FOR_ACTIVATING_OA)==0
+        %         %The first condition implies that if any one of the UT sensors have
+        %         %detetcted an obstacle then the condition is TRUE. The second
+        %         %condition says that remove all the ZEROS from UT sensors data
+        %         %array and make sure that the robot's minimum distance to the obstacle is greater than DISTANCE_FOR_ACTIVATING_OA. If
+        %         %the robot move closer (i.e.<DISTANCE_FOR_ACTIVATING_OA) to the obstacle then this condition is FALSE
+        token=1; %'OA_GTG';
+        status='I am in OA_GTG';
+%         STATUS_MESSAGES(1,i)=status;
+        disp(status);
 
-%     elseif sum(distance_to_obstacle_UT(:,i))~=0 && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<DISTANCE_FOR_ACTIVATING_OA_GTG)~=0  && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<DISTANCE_FOR_ACTIVATING_DANGER_OA)==0
-elseif min(distance_to_obstacle_UT(:,i)) <= DISTANCE_FOR_ACTIVATING_DANGER_OA
+    elseif sum(distance_to_obstacle_UT(:,i))~=number_of_UT_sensors && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=1,i)<DISTANCE_FOR_ACTIVATING_OA)~=0  && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=1,i)<DISTANCE_FOR_ACTIVATING_DANGER_OA)==0
         %The first condition is the same as in the previous case. 
-        % The second consition says that 
+        % The second condition says that 
         % the robot has approached near the obstacle i.e. any one of the UT sensors reports a
-        % DISTANCE_FOR_ACTIVATING_DANGER_OA<distance < DISTANCE_FOR_ACTIVATING_OA_GTG
+        % DISTANCE_FOR_ACTIVATING_DANGER_OA<distance < DISTANCE_FOR_ACTIVATING_OA
 %         if PROGRESS_MADE==1
 %             token=2; %'OA';
 %             disp('I am in OA');
@@ -159,32 +179,37 @@ elseif min(distance_to_obstacle_UT(:,i)) <= DISTANCE_FOR_ACTIVATING_DANGER_OA
 %             token=4;
 %             disp('I am in Follow_Wall');
 %         end
-             token=2; %'OA';
-             disp('I am in OA');
-             %     elseif sum(distance_to_obstacle_UT(:,i))~=0 && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<DISTANCE_FOR_ACTIVATING_OA_GTG)==0
-        elseif min(distance_to_obstacle_UT(:,i)) <= DISTANCE_FOR_ACTIVATING_OA_GTG
-        %         %The first condition implies that if any one of the UT sensors have
-        %         %detetcted an obstacle then the condition is TRUE. The second
-        %         %condition says that remove all the ZEROS from UT sensors data
-        %         %array and make sure that the robot's minimum distance to the obstacle is greater than DISTANCE_FOR_ACTIVATING_OA_GTG. If
-        %         %the robot move closer (i.e.<DISTANCE_FOR_ACTIVATING_OA_GTG) to the obstacle then this condition is FALSE
-        token=1; %'OA_GTG';
-        disp('I am in OA_GTG');
-    elseif sum(distance_to_obstacle_UT(:,i))~=0 && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=0,i)<DISTANCE_FOR_ACTIVATING_DANGER_OA)~=0
-        %The first condition is the same as in the first case.
-        % the robot has approached very near to the obstacle i.e. any one of the UT sensors reports a 
-        % distance< DISTANCE_FOR_ACTIVATING_DANGER_OA
-        
-        
+%              token=2; %'OA';
+%              disp('I am in OA');
+																																						 
+%              
+																									  
+													 
+		
+		
         if PROGRESS_MADE==1
-            token=3; %'Danger_OA';
-            
-            disp('I am in Danger_OA');
+            token=2; %'OA';
+            status='I am in OA';
+%             STATUS_MESSAGES(1,i)=status;
+            disp(status);
         elseif PROGRESS_MADE==0
             token=4;
-            disp('I am in Follow_Wall');
+            status='I am in Follow_Wall';
+%             STATUS_MESSAGES(1,i)=status;
+            disp(status);
         end
-  
+     
+% %     %This state is not present in the Magnus's algorithm     
+% %     elseif sum(distance_to_obstacle_UT(:,i))~=number_of_UT_sensors && sum (distance_to_obstacle_UT(distance_to_obstacle_UT (:,i)~=1,i)<DISTANCE_FOR_ACTIVATING_DANGER_OA)~=0
+% %         %The first condition is the same as in the first case.
+% %         % the robot has approached very near to the obstacle i.e. any one of the UT sensors reports a 
+% %         % distance< DISTANCE_FOR_ACTIVATING_DANGER_OA
+% %         
+% %         token=3; %'Danger_OA';
+% %         status='I am in Danger_OA';
+% % %         STATUS_MESSAGES(1,i)=status;
+% %         disp(status);
+        
         
     end
 %     
@@ -239,7 +264,7 @@ elseif min(distance_to_obstacle_UT(:,i)) <= DISTANCE_FOR_ACTIVATING_DANGER_OA
     end
     
     %Calculate a vector from the transformed point to the robot's center
-    UT_sensor_gains = [1.1 1.5 1 1.5 1.1];
+    UT_sensor_gains = [1 1 1 1 1];
     u_i = (OA_UT_vectors_WF(1:2,:)-repmat([ robot_x_pos(i); robot_y_pos(i)],1,number_of_UT_sensors))*diag(UT_sensor_gains);
     %      u_ao = sum(u_i,2);
     
@@ -263,7 +288,7 @@ elseif min(distance_to_obstacle_UT(:,i)) <= DISTANCE_FOR_ACTIVATING_DANGER_OA
     %                      Blended Controller
     %-------------------------------------------------------------------
     %--------------------------------------------------------------------
-    alpha=0.75;
+    alpha=0.9;
 %     alpha=0.6;
    
     
@@ -300,7 +325,7 @@ elseif min(distance_to_obstacle_UT(:,i)) <= DISTANCE_FOR_ACTIVATING_DANGER_OA
             index=index+1;
         end
         
-        
+                index=1;
         %         elseif ((cond4 && cond5) || (cond5 && cond6))
         %the wall is on the right
         % Calculating p1 and p2 vector
@@ -330,7 +355,7 @@ elseif min(distance_to_obstacle_UT(:,i)) <= DISTANCE_FOR_ACTIVATING_DANGER_OA
         ufw_t_norm_vector_LEFT=ufw_t_LEFT/ufw_t_magnitude_LEFT;
         
         %Calculating p2-p1 for the right hand side
-        ufw_t_RIGHT=p2_LEFT-p1_RIGHT;
+        ufw_t_RIGHT=p2_RIGHT-p1_RIGHT;
         ufw_t_magnitude_RIGHT=norm(ufw_t_RIGHT);
         ufw_t_norm_vector_RIGHT=ufw_t_RIGHT/ufw_t_magnitude_RIGHT;
         
@@ -352,7 +377,7 @@ elseif min(distance_to_obstacle_UT(:,i)) <= DISTANCE_FOR_ACTIVATING_DANGER_OA
         ufw_p_RIGHT=(ua_WF_RIGHT-up_WF_RIGHT)-((ua_WF_RIGHT-up_WF_RIGHT)*ufw_t_norm_vector_RIGHT')*ufw_t_norm_vector_RIGHT;
         
         
-        dfw=0.5 ;  %minimum distance we want to maintain from the wall
+        dfw=MINIMUM_DISTANCE_FROM_THE_WALL;   %minimum distance we want to maintain from the wall
         alphafw=0.5;
         
         ufw_p_magnitude_LEFT=norm(ufw_p_LEFT);
@@ -373,8 +398,16 @@ elseif min(distance_to_obstacle_UT(:,i)) <= DISTANCE_FOR_ACTIVATING_DANGER_OA
         ufw_p_opp_norm_vector_LEFT=ufw_p_opp_LEFT/ufw_p_opp_magnitude_LEFT;
         ufw_p_opp_norm_vector_RIGHT=ufw_p_opp_RIGHT/ufw_p_opp_magnitude_RIGHT;
         
-        ufw_LEFT=alphafw*ufw_t_norm_vector_LEFT+(1-alphafw)*ufw_p_opp_norm_vector_LEFT;
-        ufw_RIGHT=alphafw*ufw_t_norm_vector_RIGHT+(1-alphafw)*ufw_p_opp_norm_vector_RIGHT;
+               %Use either of the technique for calculating ufw_LEFT and ufw_RIGHT
+        
+%         %MBK algorithm
+%         ufw_LEFT=alphafw*ufw_t_norm_vector_LEFT+(1-alphafw)*ufw_p_opp_norm_vector_LEFT;
+%         ufw_RIGHT=alphafw*ufw_t_norm_vector_RIGHT+(1-alphafw)*ufw_p_opp_norm_vector_RIGHT;
+%         
+        %Magnus algorithm
+        ufw_LEFT=alphafw*ufw_t_norm_vector_LEFT+(1-alphafw)*ufw_p_opp_LEFT;
+        ufw_RIGHT=alphafw*ufw_t_norm_vector_RIGHT+(1-alphafw)*ufw_p_opp_RIGHT;
+        
         
         if sum(isnan(ufw_LEFT))>0
             ufw_LEFT=[0;0];
@@ -387,15 +420,16 @@ elseif min(distance_to_obstacle_UT(:,i)) <= DISTANCE_FOR_ACTIVATING_DANGER_OA
         sigma_LEFT=inv([GTG_norm_vector(1,i) OA_norm_vector(1,i); GTG_norm_vector(2,i) OA_norm_vector(2,i)])*ufw_LEFT;
         sigma_RIGHT=inv([GTG_norm_vector(1,i) OA_norm_vector(1,i); GTG_norm_vector(2,i) OA_norm_vector(2,i)])*ufw_RIGHT;
         
-        if (sigma_LEFT(1)>0 && sigma_LEFT(2)>0)
+        if (sigma_LEFT(1)>=0 && sigma_LEFT(2)>=0)
             ufw=ufw_LEFT;
             disp('I am in follow wall LEFT');
-        elseif (sigma_RIGHT(1)>0 && sigma_RIGHT(2)>0)
+        elseif (sigma_RIGHT(1)>=0 && sigma_RIGHT(2)>=0)
             ufw=ufw_RIGHT;
             disp('I am in follow wall RIGHT');
         else
-            token=3;
+
             disp('I am not following wall either on the RIGHT or LEFT');
+%             ufw=OA_GTG_vector;
         end
         
     end
@@ -421,7 +455,7 @@ elseif min(distance_to_obstacle_UT(:,i)) <= DISTANCE_FOR_ACTIVATING_DANGER_OA
     elseif token==2   % OA
         theta_desired(i)=atan2(OA_norm_vector(2,i),OA_norm_vector(1,i));
      elseif token==3 % DANGER OA
-        theta_desired(i)=robot_theta(i)+pi/4;
+        theta_desired(i)=robot_theta(i)+pi/10;
         
     elseif token==4  % FOLLOW WALL
         theta_desired(i)=atan2(ufw(2),ufw(1));
